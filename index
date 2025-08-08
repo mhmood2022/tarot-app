@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قراءة التاروت الاحترافية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #f0d67b;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(13, 27, 42, 0.85);
+      z-index: -1;
+    }
+
+    header {
+      text-align: center;
+      padding: 12px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background-color: #122c49;
+      box-shadow: 0 2px 8px #0006;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cards-layout {
+      max-width: 960px;
+      margin: 15px auto;
+      padding: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      width: 120px;
+      aspect-ratio: 2/3;
+      background: url('tarot_images/pack.jpg') no-repeat center;
+      background-size: cover;
+      border: 2px solid #f0d67b;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #0005;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .card.flipped img {
+      display: block;
+    }
+
+    .card-name {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 4px;
+      font-size: 0.85em;
+      color: #f0d67b;
+    }
+
+    .card-desc {
+      text-align: center;
+      font-size: 0.75em;
+      color: #c9a441;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* الأزرار في الأسفل */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 44, 73, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+      border-top: 1px solid #f0d67b33;
+    }
+
+    .bottom-bar select,
+    .bottom-bar button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95em;
+      text-align: center;
+    }
+
+    .bottom-bar select {
+      background: #0d1b2a;
+      color: #f0d67b;
+    }
+
+    .bottom-bar button {
+      background: linear-gradient(to right, #f0d67b, #c9a441);
+      color: #122c49;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* زر الرسائل */
+    .message-btn {
+      position: fixed;
+      bottom: 80px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(240, 214, 123, 0.9);
+      color: #122c49;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2em;
+      box-shadow: 0 0 15px rgba(240, 214, 123, 0.6);
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    /* منطقة كروت الرسائل */
+    .messages-area {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.5s, max-height 0.5s;
+    }
+
+    .messages-area.show {
+      opacity: 1;
+      max-height: 300px;
+      padding: 15px;
+    }
+
+    .message-card {
+      width: 100px;
+      aspect-ratio: 2/3;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(240, 214, 123, 0.4);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .message-card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .message-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* نافذة التفاصيل */
+    #fullscreenCard {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.95);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 999;
+      padding: 20px;
+    }
+
+    #fullscreenCard img {
+      max-width: 90vw;
+      max-height: 60vh;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #f0d67b;
+    }
+
+    #fullscreenCard .desc {
+      margin-top: 20px;
+      max-width: 600px;
+      background-color: #1b263bcc;
+      padding: 15px;
+      border-radius: 10px;
+      color: #f0d67b;
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+
+    #fullscreenCard .close {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>🔮 قراءة التاروت الاحترافية</header>
+
+  <div class="cards-layout">
+    <!-- الصف الأول: 2 كروت -->
+    <div class="row" id="row1"></div>
+    <!-- الصف الثاني: 4 كروت -->
+    <div class="row" id="row2"></div>
+    <!-- الصف الثالث: 6 كروت -->
+    <div class="row" id="row3"></div>
+  </div>
+
+  <!-- منطقة كروت الرسائل -->
+  <div class="messages-area" id="messagesArea"></div>
+
+  <!-- زر الرسائل -->
+  <div class="message-btn" onclick="showMessages()">📨</div>
+
+  <!-- الأزرار في الأسفل -->
+  <div class="bottom-bar">
+    <select id="readingType">
+      <option value="general">العامة</option>
+      <option value="love">العاطفة</option>
+      <option value="third">الثلاثية</option>
+      <option value="hidden">المخفي</option>
+      <option value="partner">الشريك</option>
+      <option value="you">طاقتك</option>
+    </select>
+    <button onclick="shuffleCards()">🔄 خلط</button>
+  </div>
+
+  <!-- نافذة التفاصيل الكاملة -->
+  <div id="fullscreenCard" onclick="this.style.display='none'">
+    <span class="close" onclick="event.stopPropagation(); this.parentElement.style.display='none';">×</span>
+    <img src="" alt="card">
+    <div class="desc">شرح البطاقة هنا حسب نوع القراءة</div>
+  </div>
+
+  <script>
+    // --- أسماء كروت التاروت (بلا مسافات) ---
+    const tarotCards = [
+      "TheFool", "TheMagician", "TheHighPriestess", "TheEmpress", "TheEmperor",
+      "TheHierophant", "TheLovers", "TheChariot", "Strength", "TheHermit",
+      "WheelOfFortune", "Justice", "TheHangedMan", "Death", "Temperance",
+      "TheDevil", "TheTower", "TheStar", "TheMoon", "TheSun", "Judgement", "TheWorld"
+    ];
+
+    // --- شروحات قصيرة لكل بطاقة ---
+    const cardShortDesc = {
+      "TheFool": "بداية جديدة، مغامرة",
+      "TheMagician": "القوة، الإرادة",
+      "TheEmpress": "الخصوبة، الرعاية",
+      "Death": "التحول، النهاية",
+      "TheStar": "الأمل، الإلهام",
+      "TheMoon": "الوهم، الخوف",
+      "TheSun": "الفرح، النجاح",
+      "Justice": "التوازن، العدالة"
+    };
+
+    // --- شروحات تفصيلية حسب نوع القراءة ---
+    const explanations = {
+      general: {
+        "TheFool": "طاقة جديدة قادمة، كن منفتحًا.",
+        "TheMagician": "أنت تملك كل الأدوات، ابدأ الآن.",
+        "Death": "نهاية شيء قديم لبدء جديد."
+      },
+      love: {
+        "TheLovers": "اتصال عميق، قرار عاطفي.",
+        "TheEmpress": "علاقة غنية بالحب."
+      },
+      you: {
+        "TheHermit": "تحتاج للتأمل والانعزال.",
+        "Strength": "قوتك الحقيقية في اللطف."
+      }
+    };
+
+    // --- خلط الكروت وتوزيعها ---
+    function shuffleCards() {
+      const type = document.getElementById("readingType").value;
+      const deck = [...tarotCards].sort(() => 0.5 - Math.random());
+
+      createRow("row1", deck.slice(0, 2), type);
+      createRow("row2", deck.slice(2, 6), type);
+      createRow("row3", deck.slice(6, 12), type);
+
+      // إخفاء كروت الرسائل عند خلط جديد
+      document.getElementById("messagesArea").classList.remove("show");
+      document.getElementById("messagesArea").innerHTML = "";
+    }
+
+    // --- إنشاء صف الكروت ---
+    function createRow(rowId, cards, type) {
+      const row = document.getElementById(rowId);
+      row.innerHTML = "";
+      cards.forEach(name => {
+        const div = document.createElement("div");
+        div.className = "card";
+        const img = document.createElement("img");
+        img.src = `tarot_images/${name}.jpg`;
+        div.appendChild(img);
+
+        div.dataset.name = name;
+        div.dataset.type = type;
+
+        div.onclick = function() {
+          if (this.classList.contains("flipped")) {
+            showCard(name, type);
+          } else {
+            this.classList.add("flipped");
+            const nameDiv = document.createElement("div");
+            nameDiv.className = "card-name";
+            nameDiv.textContent = name.replace(/([A-Z])/g, ' $1').trim();
+
+            const descDiv = document.createElement("div");
+            descDiv.className = "card-desc";
+            descDiv.textContent = cardShortDesc[name] || "طاقة عميقة";
+
+            div.appendChild(nameDiv);
+            div.appendChild(descDiv);
+          }
+        };
+
+        row.appendChild(div);
+      });
+    }
+
+    // --- عرض التفاصيل الكاملة ---
+    function showCard(cardName, type) {
+      const desc = explanations[type]?.[cardName] || "لا يوجد شرح مفصل لهذه البطاقة حاليًا.";
+      const fs = document.getElementById("fullscreenCard");
+      fs.style.display = "flex";
+      fs.querySelector("img").src = `tarot_images/${cardName}.jpg`;
+      fs.querySelector(".desc").textContent = desc;
+    }
+
+    // --- عرض كروت الرسائل (من angel_images) ---
+    function showMessages() {
+      const area = document.getElementById("messagesArea");
+      area.innerHTML = "";
+      area.classList.remove("show");
+
+      const angelCards = [
+        "Angel1", "Angel2", 
+        "Angel3", "Angel4"
+      ];
+
+      setTimeout(() => {
+        area.classList.add("show");
+        angelCards.forEach((card, index) => {
+          setTimeout(() => {
+            const div = document.createElement("div");
+            div.className = "message-card";
+            const img = document.createElement("img");
+            img.src = `angel_images/${card}.jpg`;
+            div.appendChild(img);
+            area.appendChild(div);
+
+            setTimeout(() => {
+              div.classList.add("show");
+            }, 100);
+          }, index * 600);
+        });
+      }, 100);
+    }
+  </script>
+</body>
+</html>
